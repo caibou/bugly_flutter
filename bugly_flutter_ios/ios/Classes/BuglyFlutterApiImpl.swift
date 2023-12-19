@@ -7,20 +7,33 @@
 import Bugly
 import Flutter
 
-public class BuglyFlutterApiPlugin: NSObject, BuglyApi, FlutterPlugin {
-    
+public class BuglyFlutterApiPlugin: NSObject, BuglyApi, BuglyDelegate, FlutterPlugin {
+    let localCrashLogKey = "BuglyLocalCrashLog";
+    var previousCrasLog: String?;
+
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = BuglyFlutterApiPlugin();
         registrar.publish(instance);
         BuglyApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance)
     }
-    
+
+    public func attachment(for exception: NSException?) -> String? {
+        let log = stringify(exception: exception)
+        UserDefaults.standard.setValue(log, forKey: localCrashLogKey)
+        return "崩溃日志以存入设备本地"
+    }
+
     func startWithAppId(appId: String?, message: BuglyConfigMessage, isDevelopmentDevice: Bool) throws {
         let config = BuglyConfig();
         config.debugMode = message.debugMode;
         config.blockMonitorEnable = message.blockMonitorEnable;
         config.viewControllerTrackingEnable = message.pageTrackingEnable;
-        
+
+        // 非正常退出事件记录开关
+        config.unexpectedTerminatingDetectionEnable = true;
+        // 崩溃时候出发 attachment 回调
+        config.delegate = self;
+
         if let value = message.version {
             config.version = value
         }
@@ -34,6 +47,10 @@ public class BuglyFlutterApiPlugin: NSObject, BuglyApi, FlutterPlugin {
         }
         
         Bugly.start(withAppId: appId, developmentDevice: isDevelopmentDevice, config: config)
+
+        // 获取上次崩溃信息
+        previousCrasLog = UserDefaults.standard.string(forKey: localCrashLogKey)
+        UserDefaults.standard.removeObject(forKey: localCrashLogKey)
     }
     
     func setUserIdentifier(userId: String) throws {
@@ -58,5 +75,48 @@ public class BuglyFlutterApiPlugin: NSObject, BuglyApi, FlutterPlugin {
     
     func deviceId() throws -> String {
         return Bugly.buglyDeviceId();
+    }
+
+    func fetchCrashPreviousLaunch() throws -> String? {
+        return previousCrasLog;
+    }
+
+    func stringify(exception: NSException?) -> String? {
+        let formatter = DateFormatter()
+        let exceptionInfo: [String: Any] = [
+            "name": exception?.name.rawValue ?? "no name",
+            "reason": exception?.reason ?? "No reason provided",
+            "userInfo": stringifyUserInfo(userInfo: exception?.userInfo) ?? "no userInfo",
+            "callStack": exception?.callStackSymbols ?? "no call stack",
+            "crashTime": Date().timeIntervalSince1970
+        ]
+
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: exceptionInfo, options: .prettyPrinted)
+            return String(data: jsonData, encoding: .utf8)
+        } catch {
+            print("Error converting exception to JSON: \(error)")
+            return nil
+        }
+    }
+
+    func stringifyUserInfo(userInfo: [AnyHashable : Any]?) -> String? {
+        guard let userInfo = userInfo else {
+            return nil
+        }
+
+        var dict = [String: Any]()
+
+        for (key, value) in userInfo {
+            dict[String(describing: key)] = value
+        }
+
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: dict, options: .prettyPrinted)
+            return String(data: jsonData, encoding: .utf8)
+        } catch {
+            print("Error converting to JSON: \(error)")
+            return nil
+        }
     }
 }

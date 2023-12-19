@@ -1,7 +1,6 @@
 import 'package:bugly_flutter_platform_interface/bugly_flutter_platform_interface.dart';
 
 class Bugly {
-
   Bugly._();
 
   static final _instance = BuglyPlatform.instance;
@@ -31,4 +30,17 @@ class Bugly {
       _instance.reportError(code, errorMesssage);
 
   static Future<String> deviceId() => _instance.deviceId();
+
+  static Future<String?> fetchCrashPreviousLaunch() =>
+      _instance.fetchCrashPreviousLaunch();
+
+  static Future<void> initLogger(BuglyLogLevelType level, bool printConsole) =>
+      _instance.initLogger(level, printConsole);
+
+  static Future<void> log(
+    BuglyLogLevelType level, {
+    String? tag,
+    String? message,
+  }) =>
+      _instance.log(level, tag ?? 'undefinedTag', message ?? '');
 }

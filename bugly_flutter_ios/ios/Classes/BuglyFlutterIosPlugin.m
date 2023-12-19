@@ -5,6 +5,7 @@
 @implementation BuglyFlutterIosPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
     [BuglyFlutterApiPlugin registerWithRegistrar:registrar];
+    [BuglyFlutterLogApiPlugin registerWithRegistrar:registrar];
 }
 
 @end
