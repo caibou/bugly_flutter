@@ -31,7 +31,7 @@ class Bugly {
 
   static Future<String> deviceId() => _instance.deviceId();
 
-  static Future<String?> fetchCrashPreviousLaunch() =>
+  static Future<BuglyCrashInfo?> fetchCrashPreviousLaunch() =>
       _instance.fetchCrashPreviousLaunch();
 
   static Future<void> initLogger(BuglyLogLevelType level, bool printConsole) =>

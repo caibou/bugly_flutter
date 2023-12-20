@@ -57,5 +57,15 @@ class BuglyFlutterIos extends BuglyPlatform {
       _logApi.log(level.index, tag, message);
 
   @override
-  Future<String?> fetchCrashPreviousLaunch() => _api.fetchCrashPreviousLaunch();
+  Future<BuglyCrashInfo?> fetchCrashPreviousLaunch() async {
+    final buglyCrashInfo = await _api.fetchCrashPreviousLaunch();
+    if (buglyCrashInfo != null) {
+      return BuglyCrashInfo(
+        buglyCrashInfo.crashTime,
+        buglyCrashInfo.crashLog,
+      );
+    } else {
+      return null;
+    }
+  }
 }

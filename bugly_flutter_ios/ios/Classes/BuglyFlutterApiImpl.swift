@@ -6,21 +6,23 @@
 //
 import Bugly
 import Flutter
+import SwiftyJSON
 
 public class BuglyFlutterApiPlugin: NSObject, BuglyApi, BuglyDelegate, FlutterPlugin {
     let localCrashLogKey = "BuglyLocalCrashLog";
-    var previousCrasLog: String?;
+    var previousCrasLog: BuglyCrashInfoMessage?;
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = BuglyFlutterApiPlugin();
         registrar.publish(instance);
         BuglyApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance)
+        print(UserDefaults.standard.dictionaryRepresentation())
     }
 
     public func attachment(for exception: NSException?) -> String? {
-        let log = stringify(exception: exception)
+        let log = convertExceptionToJson(exception: exception)
         UserDefaults.standard.setValue(log, forKey: localCrashLogKey)
-        return "崩溃日志以存入设备本地"
+        return nil
     }
 
     func startWithAppId(appId: String?, message: BuglyConfigMessage, isDevelopmentDevice: Bool) throws {
@@ -37,20 +39,27 @@ public class BuglyFlutterApiPlugin: NSObject, BuglyApi, BuglyDelegate, FlutterPl
         if let value = message.version {
             config.version = value
         }
-        
+
         if let value = message.deviceIdentifier {
             config.deviceIdentifier = value
         }
-        
+
         if let value = message.channel {
             config.channel = value
         }
-        
+
         Bugly.start(withAppId: appId, developmentDevice: isDevelopmentDevice, config: config)
 
         // 获取上次崩溃信息
-        previousCrasLog = UserDefaults.standard.string(forKey: localCrashLogKey)
-        UserDefaults.standard.removeObject(forKey: localCrashLogKey)
+        if let crashInfoJsonString = UserDefaults.standard.object(forKey: localCrashLogKey) as? String {
+            let crashInfo = JSON(parseJSON: crashInfoJsonString)
+            let dict = crashInfo.dictionaryValue;
+            if let crashTime = dict["crashTime"]?.double, let crashLog = dict["crashLog"]?.rawString() {
+                previousCrasLog = BuglyCrashInfoMessage(crashTime: Int64(crashTime), crashLog: crashLog)
+                UserDefaults.standard.removeObject(forKey: localCrashLogKey)
+            }
+        }
+
     }
     
     func setUserIdentifier(userId: String) throws {
@@ -77,46 +86,34 @@ public class BuglyFlutterApiPlugin: NSObject, BuglyApi, BuglyDelegate, FlutterPl
         return Bugly.buglyDeviceId();
     }
 
-    func fetchCrashPreviousLaunch() throws -> String? {
+    func fetchCrashPreviousLaunch() throws -> BuglyCrashInfoMessage? {
         return previousCrasLog;
     }
 
-    func stringify(exception: NSException?) -> String? {
-        let formatter = DateFormatter()
-        let exceptionInfo: [String: Any] = [
-            "name": exception?.name.rawValue ?? "no name",
-            "reason": exception?.reason ?? "No reason provided",
-            "userInfo": stringifyUserInfo(userInfo: exception?.userInfo) ?? "no userInfo",
-            "callStack": exception?.callStackSymbols ?? "no call stack",
-            "crashTime": Date().timeIntervalSince1970
+    func convertExceptionToJson(exception: NSException?) -> String? {
+        let exceptionInfo: [String: Any?] = [
+            "name": exception?.name.rawValue,
+            "reason": exception?.reason,
+            "userInfo": stringifyUserInfo(userInfo: exception?.userInfo),
+            "callStack": exception?.callStackSymbols,
         ]
-
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: exceptionInfo, options: .prettyPrinted)
-            return String(data: jsonData, encoding: .utf8)
-        } catch {
-            print("Error converting exception to JSON: \(error)")
-            return nil
-        }
+        let crashLog = JSON(exceptionInfo)
+        let crashTime = Date().timeIntervalSince1970
+        let crashMessage: [String: Any] = [
+            "crashTime": crashTime,
+            "crashLog": crashLog,
+        ]
+        return JSON(crashMessage).rawString()
     }
 
-    func stringifyUserInfo(userInfo: [AnyHashable : Any]?) -> String? {
+    func stringifyUserInfo(userInfo: [AnyHashable: Any]?) -> String? {
         guard let userInfo = userInfo else {
             return nil
         }
-
         var dict = [String: Any]()
-
         for (key, value) in userInfo {
             dict[String(describing: key)] = value
         }
-
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: dict, options: .prettyPrinted)
-            return String(data: jsonData, encoding: .utf8)
-        } catch {
-            print("Error converting to JSON: \(error)")
-            return nil
-        }
+        return JSON(dict).rawString()
     }
 }

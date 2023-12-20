@@ -75,11 +75,35 @@ struct BuglyConfigMessage {
     ]
   }
 }
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct BuglyCrashInfoMessage {
+  var crashTime: Int64
+  var crashLog: String
+
+  static func fromList(_ list: [Any?]) -> BuglyCrashInfoMessage? {
+    let crashTime = list[0] is Int64 ? list[0] as! Int64 : Int64(list[0] as! Int32)
+    let crashLog = list[1] as! String
+
+    return BuglyCrashInfoMessage(
+      crashTime: crashTime,
+      crashLog: crashLog
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      crashTime,
+      crashLog,
+    ]
+  }
+}
 private class BuglyApiCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
       case 128:
         return BuglyConfigMessage.fromList(self.readValue() as! [Any?])
+      case 129:
+        return BuglyCrashInfoMessage.fromList(self.readValue() as! [Any?])
       default:
         return super.readValue(ofType: type)
     }
@@ -90,6 +114,9 @@ private class BuglyApiCodecWriter: FlutterStandardWriter {
   override func writeValue(_ value: Any) {
     if let value = value as? BuglyConfigMessage {
       super.writeByte(128)
+      super.writeValue(value.toList())
+    } else if let value = value as? BuglyCrashInfoMessage {
+      super.writeByte(129)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -120,7 +147,7 @@ protocol BuglyApi {
   func reportException(code: Int64, reason: String) throws
   func reportError(code: Int64, errorMesssage: String) throws
   func deviceId() throws -> String
-  func fetchCrashPreviousLaunch() throws -> String?
+  func fetchCrashPreviousLaunch() throws -> BuglyCrashInfoMessage?
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.

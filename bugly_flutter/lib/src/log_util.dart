@@ -1,7 +1,7 @@
 import 'package:bugly_flutter/bugly_flutter.dart';
 
 /// Bugly 日志
-class B {
+class BuglyLog {
   static Future<void> verbose({String? tag, String? message}) =>
       Bugly.log(BuglyLogLevelType.verbose, tag: tag, message: message);
 

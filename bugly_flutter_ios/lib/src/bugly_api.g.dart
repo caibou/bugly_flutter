@@ -61,12 +61,41 @@ class BuglyConfigMessage {
   }
 }
 
+class BuglyCrashInfoMessage {
+  BuglyCrashInfoMessage({
+    required this.crashTime,
+    required this.crashLog,
+  });
+
+  int crashTime;
+
+  String crashLog;
+
+  Object encode() {
+    return <Object?>[
+      crashTime,
+      crashLog,
+    ];
+  }
+
+  static BuglyCrashInfoMessage decode(Object result) {
+    result as List<Object?>;
+    return BuglyCrashInfoMessage(
+      crashTime: result[0]! as int,
+      crashLog: result[1]! as String,
+    );
+  }
+}
+
 class _BuglyApiCodec extends StandardMessageCodec {
   const _BuglyApiCodec();
   @override
   void writeValue(WriteBuffer buffer, Object? value) {
     if (value is BuglyConfigMessage) {
       buffer.putUint8(128);
+      writeValue(buffer, value.encode());
+    } else if (value is BuglyCrashInfoMessage) {
+      buffer.putUint8(129);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -78,6 +107,8 @@ class _BuglyApiCodec extends StandardMessageCodec {
     switch (type) {
       case 128: 
         return BuglyConfigMessage.decode(readValue(buffer)!);
+      case 129: 
+        return BuglyCrashInfoMessage.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -253,7 +284,7 @@ class BuglyApi {
     }
   }
 
-  Future<String?> fetchCrashPreviousLaunch() async {
+  Future<BuglyCrashInfoMessage?> fetchCrashPreviousLaunch() async {
     const String channelName = 'dev.flutter.pigeon.bugly_flutter_ios.BuglyApi.fetchCrashPreviousLaunch';
     final BasicMessageChannel<Object?> channel = BasicMessageChannel<Object?>(
       channelName,
@@ -271,7 +302,7 @@ class BuglyApi {
         details: replyList[2],
       );
     } else {
-      return (replyList[0] as String?);
+      return (replyList[0] as BuglyCrashInfoMessage?);
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:bugly_flutter_platform_interface/bugly_flutter_platform_interface.dart';
+import 'package:bugly_flutter_platform_interface/src/types/bugly_crash_info.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import '../types/bugly_config.dart';
@@ -28,7 +29,7 @@ abstract class BuglyPlatform extends PlatformInterface {
   Future<void> reportException(int code, String errorMessage);
   Future<void> reportError(int code, String errorMesssage);
   Future<String> deviceId();
-  Future<String?> fetchCrashPreviousLaunch();
+  Future<BuglyCrashInfo?> fetchCrashPreviousLaunch();
 
   Future<void> initLogger(BuglyLogLevelType level, bool printConsole);
   Future<void> log(BuglyLogLevelType level, String tag, String message);
@@ -93,7 +94,7 @@ class _Placeholder extends BuglyPlatform {
   }
 
   @override
-  Future<String?> fetchCrashPreviousLaunch() {
+  Future<BuglyCrashInfo?> fetchCrashPreviousLaunch() {
     // TODO: implement fetchCrashPreviousLaunch
     throw UnimplementedError();
   }

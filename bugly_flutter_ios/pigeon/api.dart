@@ -22,6 +22,13 @@ class BuglyConfigMessage {
   );
 }
 
+class BuglyCrashInfoMessage {
+  final int crashTime;
+  final String crashLog;
+
+  BuglyCrashInfoMessage(this.crashTime, this.crashLog);
+}
+
 @HostApi()
 abstract class BuglyApi {
   void startWithAppId(
@@ -32,7 +39,7 @@ abstract class BuglyApi {
   void reportException(int code, String reason);
   void reportError(int code, String errorMesssage);
   String deviceId();
-  String? fetchCrashPreviousLaunch();
+  BuglyCrashInfoMessage? fetchCrashPreviousLaunch();
 }
 
 @HostApi()
