@@ -3,6 +3,7 @@ import 'package:bugly_flutter_platform_interface/bugly_flutter_platform_interfac
 
 class BuglyFlutterIos extends BuglyPlatform {
   final BuglyApi _api = BuglyApi();
+  final BuglyLogApi _logApi = BuglyLogApi();
 
   static void registerWith() {
     BuglyPlatform.instance = BuglyFlutterIos();
@@ -46,4 +47,25 @@ class BuglyFlutterIos extends BuglyPlatform {
   @override
   Future<void> reportException(int code, String errorMessage) =>
       _api.reportException(code, errorMessage);
+
+  @override
+  Future<void> initLogger(BuglyLogLevelType level, bool printConsole) =>
+      _logApi.initLogger(level.index, printConsole);
+
+  @override
+  Future<void> log(BuglyLogLevelType level, String tag, String message) =>
+      _logApi.log(level.index, tag, message);
+
+  @override
+  Future<BuglyCrashInfo?> fetchCrashPreviousLaunch() async {
+    final buglyCrashInfo = await _api.fetchCrashPreviousLaunch();
+    if (buglyCrashInfo != null) {
+      return BuglyCrashInfo(
+        buglyCrashInfo.crashTime,
+        buglyCrashInfo.crashLog,
+      );
+    } else {
+      return null;
+    }
+  }
 }

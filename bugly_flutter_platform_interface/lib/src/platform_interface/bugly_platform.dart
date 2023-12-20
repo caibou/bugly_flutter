@@ -1,3 +1,5 @@
+import 'package:bugly_flutter_platform_interface/bugly_flutter_platform_interface.dart';
+import 'package:bugly_flutter_platform_interface/src/types/bugly_crash_info.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import '../types/bugly_config.dart';
@@ -16,7 +18,10 @@ abstract class BuglyPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<void> startWithAppId({String? appId, BuglyConfig buglyConfig = const BuglyConfig(), bool isDevelopmentDevice = false});
+  Future<void> startWithAppId(
+      {String? appId,
+      BuglyConfig buglyConfig = const BuglyConfig(),
+      bool isDevelopmentDevice = false});
 
   Future<void> setUserIdentifier(String userId);
   Future<void> setUserValue(String key, String value);
@@ -24,6 +29,10 @@ abstract class BuglyPlatform extends PlatformInterface {
   Future<void> reportException(int code, String errorMessage);
   Future<void> reportError(int code, String errorMesssage);
   Future<String> deviceId();
+  Future<BuglyCrashInfo?> fetchCrashPreviousLaunch();
+
+  Future<void> initLogger(BuglyLogLevelType level, bool printConsole);
+  Future<void> log(BuglyLogLevelType level, String tag, String message);
 }
 
 class _Placeholder extends BuglyPlatform {
@@ -64,8 +73,29 @@ class _Placeholder extends BuglyPlatform {
   }
 
   @override
-  Future<void> startWithAppId({String? appId, BuglyConfig buglyConfig = const BuglyConfig(), bool isDevelopmentDevice = false}) {
+  Future<void> startWithAppId(
+      {String? appId,
+      BuglyConfig buglyConfig = const BuglyConfig(),
+      bool isDevelopmentDevice = false}) {
     // TODO: implement startWithAppId
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> initLogger(BuglyLogLevelType level, bool printConsole) {
+    // TODO: implement initLogger
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> log(BuglyLogLevelType level, String tag, String message) {
+    // TODO: implement log
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<BuglyCrashInfo?> fetchCrashPreviousLaunch() {
+    // TODO: implement fetchCrashPreviousLaunch
     throw UnimplementedError();
   }
 }

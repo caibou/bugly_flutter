@@ -17,6 +17,7 @@ A new Flutter plugin project.
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.dependency 'Bugly', '2.5.93'
+  s.dependency 'SwiftyJSON', '~> 4.0'
   s.platform = :ios, '9.0'
   s.swift_version = '5.0'
 
