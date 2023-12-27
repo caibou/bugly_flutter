@@ -16,7 +16,6 @@ public class BuglyFlutterApiPlugin: NSObject, BuglyApi, BuglyDelegate, FlutterPl
         let instance = BuglyFlutterApiPlugin();
         registrar.publish(instance);
         BuglyApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance)
-        print(UserDefaults.standard.dictionaryRepresentation())
     }
 
     public func attachment(for exception: NSException?) -> String? {
